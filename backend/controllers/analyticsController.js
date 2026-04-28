@@ -6,40 +6,25 @@ const User = require('../models/User');
 // -----------------------------------
 exports.getTopRatedAlbums = async (req, res) => {
   try {
-    const topRated = await Album.aggregate([
-      { $unwind: '$reviews' },
-      {
-        $group: {
-          _id: '$_id',
-          title: { $first: '$title' },
-          artist: { $first: '$artist' },
-          cover_url: { $first: '$cover_url' },
-          color: { $first: '$color' },
-          plays: { $first: '$plays' },
-          avgRating: { $avg: '$reviews.rating' },
-          totalReviews: { $sum: 1 }
-        }
-      },
-      { $sort: { avgRating: -1, totalReviews: -1 } },
-      { $limit: 10 }
-    ]);
+    // Use the stored average_rating so ALL albums appear (not just ones with review subdocs).
+    // This field is always populated from the seed and kept up-to-date by addReview/updateReview.
+    const albums = await Album.find()
+      .sort({ average_rating: -1, total_ratings: -1 })
+      .limit(10)
+      .lean();
 
-    // Fall back to albums with no reviews (use their stored average_rating)
-    if (topRated.length === 0) {
-      const all = await Album.find().sort({ average_rating: -1 }).limit(10);
-      return res.json(all.map(a => ({
-        _id: a._id,
-        title: a.title,
-        artist: a.artist,
-        cover_url: a.cover_url,
-        color: a.color,
-        plays: a.plays,
-        avgRating: a.average_rating,
-        totalReviews: a.total_ratings
-      })));
-    }
+    const result = albums.map(a => ({
+      _id:          a._id,
+      title:        a.title,
+      artist:       a.artist,
+      cover_url:    a.cover_url || null,
+      color:        a.color,
+      plays:        a.plays,
+      avgRating:    a.average_rating,
+      totalReviews: a.reviews ? a.reviews.length : 0
+    }));
 
-    res.json(topRated);
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
