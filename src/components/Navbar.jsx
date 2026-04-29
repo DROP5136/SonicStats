@@ -6,7 +6,14 @@ import {
   IconMenu,
 } from './Icons';
 
-export default function Navbar({ onToggleSidebar }) {
+export default function Navbar({
+  onToggleSidebar,
+  searchValue,
+  onSearchChange,
+  onSearchSubmit,
+  onNavigateBack,
+  onNavigateForward,
+}) {
   return (
     <header className="navbar" id="navbar">
       <div className="navbar-left">
@@ -23,24 +30,28 @@ export default function Navbar({ onToggleSidebar }) {
 
         {/* History nav arrows */}
         <div className="nav-history">
-          <button type="button" className="nav-circle-btn" aria-label="Go back" id="nav-back">
+          <button type="button" className="nav-circle-btn" aria-label="Go back" id="nav-back" onClick={onNavigateBack}>
             <IconChevronLeft />
           </button>
-          <button type="button" className="nav-circle-btn" aria-label="Go forward" id="nav-forward">
+          <button type="button" className="nav-circle-btn" aria-label="Go forward" id="nav-forward" onClick={onNavigateForward}>
             <IconChevronRight />
           </button>
         </div>
 
         {/* Search */}
-        <div className="search-bar" id="search-container">
+        <form className="search-bar" id="search-container" onSubmit={(e) => { e.preventDefault(); onSearchSubmit?.(); }}>
           <input
             type="text"
             placeholder="Search albums, artists, reviews…"
             aria-label="Search"
             id="search-input"
+            value={searchValue}
+            onChange={(e) => onSearchChange?.(e.target.value)}
           />
-          <IconSearch />
-        </div>
+          <button type="submit" className="search-submit-btn" aria-label="Search albums">
+            <IconSearch />
+          </button>
+        </form>
       </div>
 
       <div className="navbar-right">

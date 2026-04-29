@@ -1,6 +1,6 @@
-export default function FilterBar({ timeRange, onTimeRangeChange, children }) {
+export default function FilterBar({ timeRange, onTimeRangeChange, children, align = 'right' }) {
   return (
-    <div className="filter-bar fade-in" id="filter-bar">
+    <div className={`filter-bar fade-in ${align === 'left' ? 'filter-bar-left' : ''}`} id="filter-bar">
       <div className="filter-group">
         {children}
       </div>

@@ -32,7 +32,8 @@ exports.getUserActivity = async (req, res) => {
           date: {
             $dateToString: {
               format: '%Y-%m-%d %H:%M',
-              date: '$review_activity.timestamp'
+              date: '$review_activity.timestamp',
+              timezone: 'Asia/Kolkata'
             }
           },
           color: '$albumDetails.color'
@@ -93,7 +94,8 @@ exports.getUserProfile = async (req, res) => {
           date: {
             $dateToString: {
               format: '%Y-%m-%d',
-              date: '$review_activity.timestamp'
+              date: '$review_activity.timestamp',
+              timezone: 'Asia/Kolkata'
             }
           },
           color: '$albumInfo.color'

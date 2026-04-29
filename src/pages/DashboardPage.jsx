@@ -144,13 +144,12 @@ export default function DashboardPage({ onNavigateAlbum, refreshKey }) {
 
   return (
     <>
+      <FilterBar timeRange={timeRange} onTimeRangeChange={setTimeRange} align="left" />
+
       <div className="page-header fade-in">
         <h1>Dashboard</h1>
         <p>Welcome back, Lakshay. Here's your music overview.</p>
       </div>
-
-      {/* Time Range Filter */}
-      <FilterBar timeRange={timeRange} onTimeRangeChange={setTimeRange} />
 
       {/* Stat Cards — real data from backend */}
       <div className="stats-row">

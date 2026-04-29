@@ -3,6 +3,19 @@ const API_URL = '/api';
 // ─── Current logged-in user ID (seeded in DB) ───
 const CURRENT_USER_ID = '60d5ecb8b392d700153c3000';
 
+export const formatISTDateTime = (value, includeTime = true) => {
+  if (!value) return '';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+
+  const options = includeTime
+    ? { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' }
+    : { dateStyle: 'medium', timeZone: 'Asia/Kolkata' };
+
+  return `${new Intl.DateTimeFormat('en-IN', options).format(date)} IST`;
+};
+
 // ─── Albums ───
 
 export const fetchAlbums = async () => {
@@ -38,14 +51,18 @@ export const fetchReviewsByAlbum = async (albumId) => {
   if (!response.ok) throw new Error('Failed to fetch album reviews');
   const album = await response.json();
 
-  return album.reviews.map(r => ({
-    id: r._id,
-    userId: r.user_id,
-    username: r.username,
-    rating: r.rating,
-    comment: r.review_text,
-    date: r.created_at
-  })).sort((a, b) => new Date(b.date) - new Date(a.date));
+  return album.reviews
+    .map(r => ({
+      id: r._id,
+      userId: r.user_id,
+      username: r.username,
+      rating: r.rating,
+      comment: r.review_text,
+      rawDate: r.created_at,
+      date: formatISTDateTime(r.created_at)
+    }))
+    .sort((a, b) => new Date(b.rawDate) - new Date(a.rawDate))
+    .map(({ rawDate, ...review }) => review);
 };
 
 export const postReview = async (albumId, reviewData) => {
@@ -70,7 +87,7 @@ export const postReview = async (albumId, reviewData) => {
     username: newReview.username,
     rating: newReview.rating,
     comment: newReview.review_text,
-    date: newReview.created_at
+    date: formatISTDateTime(newReview.created_at)
   };
 };
 
@@ -96,7 +113,7 @@ export const updateReview = async (albumId, reviewData) => {
     username: updatedReview.username,
     rating: updatedReview.rating,
     comment: updatedReview.review_text,
-    date: updatedReview.created_at
+    date: formatISTDateTime(updatedReview.created_at)
   };
 };
 
@@ -128,6 +145,20 @@ export const fetchTopRatedAlbums = async () => {
     plays: d.plays,
     color: d.color || '#3b82f6',
     cover_url: d.cover_url
+  }));
+};
+
+export const fetchSearchAlbums = async (query) => {
+  const response = await fetch(`${API_URL}/search?q=${encodeURIComponent(query)}`);
+  if (!response.ok) throw new Error('Failed to search albums');
+  const data = await response.json();
+  return data.map(album => ({
+    ...album,
+    id: album._id,
+    rating: album.average_rating,
+    totalRatings: album.total_ratings,
+    year: album.release_year,
+    genre: album.genres && album.genres.length > 0 ? album.genres[0] : 'Unknown'
   }));
 };
 

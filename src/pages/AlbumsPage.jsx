@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import AlbumCard from '../components/AlbumCard';
-import { fetchAlbums, fetchGenres } from '../services/api';
+import { fetchAlbums, fetchGenres, fetchSearchAlbums } from '../services/api';
 
 const RATING_FILTERS = [
   { label: 'All Ratings', value: 0 },
@@ -9,27 +9,50 @@ const RATING_FILTERS = [
   { label: '2+ ★', value: 2 },
 ];
 
-export default function AlbumsPage({ onNavigateAlbum }) {
+export default function AlbumsPage({ onNavigateAlbum, initialSearchTerm = '' }) {
   const [albums, setAlbums] = useState([]);
   const [genres, setGenres] = useState([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(initialSearchTerm);
   const [genre, setGenre] = useState('All');
   const [minRating, setMinRating] = useState(0);
 
   useEffect(() => {
-    fetchAlbums().then(setAlbums).catch(console.error);
     fetchGenres().then(setGenres).catch(console.error);
   }, []);
 
+  useEffect(() => {
+    setSearch(initialSearchTerm || '');
+  }, [initialSearchTerm]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadAlbums = async () => {
+      try {
+        const query = search.trim();
+        const data = query ? await fetchSearchAlbums(query) : await fetchAlbums();
+        if (isActive) {
+          setAlbums(data);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadAlbums();
+
+    return () => {
+      isActive = false;
+    };
+  }, [search]);
+
   const filtered = useMemo(() => {
     return albums.filter((a) => {
-      const q = search.toLowerCase();
-      const matchSearch = !q || a.title.toLowerCase().includes(q) || a.artist.toLowerCase().includes(q);
       const matchGenre = genre === 'All' || a.genre === genre;
       const matchRating = a.rating >= minRating;
-      return matchSearch && matchGenre && matchRating;
+      return matchGenre && matchRating;
     });
-  }, [albums, search, genre, minRating]);
+  }, [albums, genre, minRating]);
 
   return (
     <>

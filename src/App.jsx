@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import DashboardPage from './pages/DashboardPage';
@@ -12,16 +12,60 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [albumDetailId, setAlbumDetailId] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [albumsSearchTerm, setAlbumsSearchTerm] = useState('');
+  const [navbarSearchValue, setNavbarSearchValue] = useState('');
+
+  useEffect(() => {
+    const initialState = {
+      activePage: 'dashboard',
+      albumDetailId: null,
+      albumsSearchTerm: ''
+    };
+
+    window.history.replaceState(initialState, '', window.location.pathname);
+
+    const handlePopState = (event) => {
+      const state = event.state || initialState;
+      setActivePage(state.activePage || 'dashboard');
+      setAlbumDetailId(state.albumDetailId || null);
+      setAlbumsSearchTerm(state.albumsSearchTerm || '');
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const pushNavigationState = useCallback((nextState, replace = false) => {
+    const state = {
+      activePage,
+      albumDetailId,
+      albumsSearchTerm,
+      ...nextState
+    };
+
+    if (replace) {
+      window.history.replaceState(state, '', window.location.pathname);
+    } else {
+      window.history.pushState(state, '', window.location.pathname);
+    }
+
+    setActivePage(state.activePage || 'dashboard');
+    setAlbumDetailId(state.albumDetailId || null);
+    setAlbumsSearchTerm(state.albumsSearchTerm || '');
+  }, [activePage, albumDetailId, albumsSearchTerm]);
 
   const handleAlbumReviewUpdated = useCallback(() => {
     setRefreshKey(prev => prev + 1);
   }, []);
 
   const handleChangePage = useCallback((pageId) => {
-    setActivePage(pageId);
-    setAlbumDetailId(null);
+    pushNavigationState({
+      activePage: pageId,
+      albumDetailId: null,
+      albumsSearchTerm: pageId === 'albums' ? albumsSearchTerm : ''
+    });
     setSidebarOpen(false);
-  }, []);
+  }, [albumsSearchTerm, pushNavigationState]);
 
   const handleToggleSidebar = useCallback(() => {
     setSidebarOpen((prev) => !prev);
@@ -32,14 +76,30 @@ export default function App() {
   }, []);
 
   const handleNavigateAlbum = useCallback((id) => {
-    setAlbumDetailId(id);
-    setActivePage('album-detail');
-  }, []);
+    pushNavigationState({
+      activePage: 'album-detail',
+      albumDetailId: id
+    });
+  }, [pushNavigationState]);
 
   const handleBackFromDetail = useCallback(() => {
-    setAlbumDetailId(null);
-    setActivePage('albums');
-  }, []);
+    pushNavigationState({
+      activePage: 'albums',
+      albumDetailId: null
+    });
+  }, [pushNavigationState]);
+
+  const handleSearchSubmit = useCallback(() => {
+    const query = navbarSearchValue.trim();
+    if (!query) return;
+
+    pushNavigationState({
+      activePage: 'albums',
+      albumDetailId: null,
+      albumsSearchTerm: query
+    });
+    setSidebarOpen(false);
+  }, [navbarSearchValue, pushNavigationState]);
 
   function renderPage() {
     if (activePage === 'album-detail' && albumDetailId) {
@@ -49,7 +109,7 @@ export default function App() {
       case 'dashboard':
         return <DashboardPage onNavigateAlbum={handleNavigateAlbum} refreshKey={refreshKey} />;
       case 'albums':
-        return <AlbumsPage onNavigateAlbum={handleNavigateAlbum} />;
+        return <AlbumsPage onNavigateAlbum={handleNavigateAlbum} initialSearchTerm={albumsSearchTerm} />;
       case 'activity':
         return <ActivityPage />;
       case 'profile':
@@ -72,7 +132,14 @@ export default function App() {
         isOpen={sidebarOpen}
       />
       <div className="main-area">
-        <Navbar onToggleSidebar={handleToggleSidebar} />
+        <Navbar
+          onToggleSidebar={handleToggleSidebar}
+          searchValue={navbarSearchValue}
+          onSearchChange={setNavbarSearchValue}
+          onSearchSubmit={handleSearchSubmit}
+          onNavigateBack={() => window.history.back()}
+          onNavigateForward={() => window.history.forward()}
+        />
         <div className="page-content" id="page-content">
           {renderPage()}
         </div>
