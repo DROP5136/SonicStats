@@ -83,13 +83,13 @@ export default function ProfilePage({ refreshKey }) {
             )}
             {user.reviews.map((r, i) => (
               <div key={i} className="user-review-row">
-                <div className="user-review-dot" style={{ background: r.color }} />
+                <div className="user-review-dot" style={{ background: r.color ?? '#3b82f6' }} />
                 <div className="user-review-info">
-                  <span className="user-review-album">{r.albumTitle}</span>
-                  <span className="user-review-artist">{r.artist} · {r.date}</span>
+                  <span className="user-review-album">{r.albumTitle ?? 'Unknown Album'}</span>
+                  <span className="user-review-artist">{r.artist ?? 'Unknown Artist'} · {r.date ?? 'No date'}</span>
                 </div>
                 <div className="user-review-right">
-                  <span className="user-review-rating">★ {r.rating}</span>
+                  <span className="user-review-rating">★ {r.rating ?? 0}</span>
                 </div>
               </div>
             ))}

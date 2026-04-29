@@ -17,7 +17,7 @@ export default function AlbumCard({ album, onClick, showUserRating = false }) {
         <p className="album-card-artist">{album.artist}</p>
         <div className="album-card-footer">
           <span className="album-card-rating">
-            ★ {album.rating?.toFixed(1) || album.rating}
+            ★ {album.rating?.toFixed(1) ?? album.rating}
             {showUserRating && <span style={{ fontSize: '0.8em', marginLeft: '4px', opacity: 0.7 }}>(Your rating)</span>}
           </span>
           <span className="album-card-plays">

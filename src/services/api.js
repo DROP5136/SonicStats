@@ -56,6 +56,7 @@ export const fetchReviewsByAlbum = async (albumId) => {
       id: r._id,
       userId: r.user_id,
       username: r.username,
+      avatar: r.username?.slice(0, 2).toUpperCase() || '??',
       rating: r.rating,
       comment: r.review_text,
       rawDate: r.created_at,
@@ -227,16 +228,21 @@ export const fetchUserActivity = async (userId = CURRENT_USER_ID) => {
   const response = await fetch(`${API_URL}/users/${userId}/activity`);
   if (!response.ok) throw new Error('Failed to fetch user activity');
   const data = await response.json();
-  return data.map(entry => ({
-    id: entry._id,
-    album: entry.album,
-    artist: entry.artist,
-    action: entry.action,
-    rating: entry.rating,
-    reviewText: entry.reviewText,
-    date: entry.date,
-    color: entry.color
-  }));
+  return data.map(entry => {
+    // Keep raw timestamp for sorting, display formatted date
+    const entryDate = entry.date || '';
+    return {
+      id: entry._id,
+      album: entry.album || 'Unknown Album',
+      artist: entry.artist || 'Unknown Artist',
+      action: entry.action || 'unknown',
+      rating: entry.rating ?? 0,
+      reviewText: entry.reviewText || '',
+      timestamp: entry.timestamp || new Date(entryDate).toISOString(),
+      date: entryDate,
+      color: entry.color || '#3b82f6'
+    };
+  });
 };
 
 // ─── Genres list (for filter dropdowns) — derived from genre-chart data ───

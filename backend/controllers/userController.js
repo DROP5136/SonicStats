@@ -29,6 +29,7 @@ exports.getUserActivity = async (req, res) => {
           action: '$review_activity.action',
           rating: '$review_activity.rating',
           reviewText: '$review_activity.review_text',
+          timestamp: '$review_activity.timestamp',
           date: {
             $dateToString: {
               format: '%Y-%m-%d %H:%M',

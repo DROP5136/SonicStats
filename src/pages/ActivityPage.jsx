@@ -46,13 +46,16 @@ export default function ActivityPage() {
 
     items.sort((a, b) => {
       if (s.key === 'date') {
+        // Use timestamp for reliable sorting across browsers
+        const timeA = new Date(a.timestamp ?? 0).getTime() || 0;
+        const timeB = new Date(b.timestamp ?? 0).getTime() || 0;
         return s.dir === 'desc'
-          ? new Date(b.date) - new Date(a.date)
-          : new Date(a.date) - new Date(b.date);
+          ? timeB - timeA
+          : timeA - timeB;
       }
       if (s.key === 'rating') {
-        const aRating = a.rating || 0;
-        const bRating = b.rating || 0;
+        const aRating = a.rating ?? 0;
+        const bRating = b.rating ?? 0;
         return s.dir === 'desc'
           ? bRating - aRating
           : aRating - bRating;

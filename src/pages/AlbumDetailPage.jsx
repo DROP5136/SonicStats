@@ -77,8 +77,10 @@ export default function AlbumDetailPage({ albumId, onBack, onReviewUpdated }) {
     return [...reviews].sort((a, b) => {
       if (sortBy === 'Highest Rated') return b.rating - a.rating;
       if (sortBy === 'Lowest Rated') return a.rating - b.rating;
-      // Latest (fallback to id sorting if dates are equal)
-      return new Date(b.date).getTime() - new Date(a.date).getTime() || b.id - a.id;
+      // Latest: use rawDate with safe parsing and fallback
+      const timeA = new Date(a.rawDate ?? 0).getTime() || 0;
+      const timeB = new Date(b.rawDate ?? 0).getTime() || 0;
+      return timeB - timeA || (b.id?.toString() ?? '').localeCompare(a.id?.toString() ?? '');
     });
   }, [reviews, sortBy]);
 
