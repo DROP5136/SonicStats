@@ -41,13 +41,17 @@ exports.createAlbum = async (req, res) => {
 exports.addReview = async (req, res) => {
   try {
     const { user_id, rating, review_text } = req.body;
+    const numericRating = Number(rating);
     
-    if (rating < 1 || rating > 5) {
+    if (numericRating < 1 || numericRating > 5) {
       return res.status(400).json({ error: 'Rating must be between 1 and 5' });
     }
 
     const user = await User.findById(user_id);
     if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const album = await Album.findById(req.params.id);
+    if (!album) return res.status(404).json({ error: 'Album not found' });
 
     // Ensure one review per user per album using validation logic
     const albumCheck = await Album.findOne({
@@ -62,7 +66,7 @@ exports.addReview = async (req, res) => {
     const review = {
       user_id,
       username: user.name,
-      rating,
+      rating: numericRating,
       review_text
     };
 
@@ -73,9 +77,8 @@ exports.addReview = async (req, res) => {
     // We will recalculate average_rating in a post-save or do it simply.
     
     // Calculate new average:
-    const album = await Album.findById(req.params.id);
     const newTotal = album.total_ratings + 1;
-    const newAverage = ((album.average_rating * album.total_ratings) + rating) / newTotal;
+    const newAverage = ((album.average_rating * album.total_ratings) + numericRating) / newTotal;
 
     const updatedAlbum = await Album.findByIdAndUpdate(
       req.params.id,
@@ -97,7 +100,7 @@ exports.addReview = async (req, res) => {
             review_id: newReview._id,
             album_id: req.params.id,
             action: 'created',
-            rating,
+            rating: numericRating,
             review_text
           }
         }
@@ -115,8 +118,9 @@ exports.addReview = async (req, res) => {
 exports.updateReview = async (req, res) => {
   try {
     const { user_id, rating, review_text } = req.body;
+    const numericRating = Number(rating);
 
-    if (rating < 1 || rating > 5) {
+    if (numericRating < 1 || numericRating > 5) {
       return res.status(400).json({ error: 'Rating must be between 1 and 5' });
     }
 
@@ -128,7 +132,7 @@ exports.updateReview = async (req, res) => {
       { _id: req.params.id, 'reviews.user_id': user_id },
       {
         $set: {
-          'reviews.$.rating': rating,
+          'reviews.$.rating': numericRating,
           'reviews.$.review_text': review_text,
           'reviews.$.created_at': new Date()
         }
@@ -160,7 +164,7 @@ exports.updateReview = async (req, res) => {
             review_id: updatedReview._id,
             album_id: req.params.id,
             action: 'edited',
-            rating,
+            rating: numericRating,
             review_text
           }
         }

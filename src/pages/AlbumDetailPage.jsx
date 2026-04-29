@@ -3,7 +3,7 @@ import ReviewCard from '../components/ReviewCard';
 import StarRating from '../components/StarRating';
 import { fetchAlbumById, fetchReviewsByAlbum, postReview, updateReview, deleteReview } from '../services/api';
 
-export default function AlbumDetailPage({ albumId, onBack }) {
+export default function AlbumDetailPage({ albumId, onBack, onReviewUpdated }) {
   const [album, setAlbum] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [rating, setRating] = useState(0);
@@ -32,6 +32,8 @@ export default function AlbumDetailPage({ albumId, onBack }) {
         comment: comment.trim(),
       });
       setReviews(prev => prev.map(r => r.id === userReview.id ? { ...r, ...updatedReview } : r));
+      fetchAlbumById(albumId).then(setAlbum).catch(console.error);
+      onReviewUpdated?.();
       setIsEditing(false);
     } else {
       const newReview = await postReview(albumId, {
@@ -39,6 +41,8 @@ export default function AlbumDetailPage({ albumId, onBack }) {
         comment: comment.trim(),
       });
       setReviews(prev => [newReview, ...prev]);
+      fetchAlbumById(albumId).then(setAlbum).catch(console.error);
+      onReviewUpdated?.();
     }
     
     setRating(0);
@@ -50,6 +54,8 @@ export default function AlbumDetailPage({ albumId, onBack }) {
     if (!userReview || !window.confirm('Are you sure you want to delete your review?')) return;
     await deleteReview(albumId);
     setReviews(prev => prev.filter(r => r.id !== userReview.id));
+    fetchAlbumById(albumId).then(setAlbum).catch(console.error);
+    onReviewUpdated?.();
     setRating(0);
     setComment('');
     setIsEditing(false);

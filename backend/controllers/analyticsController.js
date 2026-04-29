@@ -31,6 +31,83 @@ exports.getTopRatedAlbums = async (req, res) => {
 };
 
 // -----------------------------------
+// 1b. User's Top Rated Albums (personalized by current user's ratings)
+// -----------------------------------
+exports.getUserTopRatedAlbums = async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    const userId = req.query.userId || req.params.userId;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    const objectId = new mongoose.Types.ObjectId(userId);
+    const user = await User.findById(objectId);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Get the most recent rating for each album (considering created and edited actions)
+    const albumRatings = {};
+    
+    for (const activity of user.review_activity) {
+      // Skip deleted reviews
+      if (activity.action === 'deleted') {
+        delete albumRatings[activity.album_id.toString()];
+        continue;
+      }
+      
+      // For created/edited actions with ratings, keep the most recent one
+      if ((activity.action === 'created' || activity.action === 'edited') && activity.rating) {
+        const albumIdStr = activity.album_id.toString();
+        albumRatings[albumIdStr] = {
+          album_id: activity.album_id,
+          rating: activity.rating,
+          timestamp: activity.timestamp || new Date(0)
+        };
+      }
+    }
+
+    const albumIds = Object.values(albumRatings).map(r => r.album_id);
+
+    if (albumIds.length === 0) {
+      return res.json([]);
+    }
+
+    // Fetch album details for those IDs
+    const albums = await Album.find({ _id: { $in: albumIds } }).lean();
+
+    // Build result by mapping with the most recent ratings
+    const enriched = albumIds.map(albumId => {
+      const album = albums.find(a => a._id.toString() === albumId.toString());
+      const ratingInfo = albumRatings[albumId.toString()];
+      
+      if (!album || !ratingInfo) return null;
+      
+      return {
+        _id:          album._id,
+        title:        album.title,
+        artist:       album.artist,
+        cover_url:    album.cover_url || null,
+        color:        album.color,
+        plays:        album.plays,
+        avgRating:    album.average_rating,
+        userRating:   ratingInfo.rating,  // Most recent rating (considers edits)
+        totalReviews: album.reviews ? album.reviews.length : 0
+      };
+    })
+    .filter(item => item !== null)  // Remove any null entries
+    .sort((a, b) => b.userRating - a.userRating);  // Sort by user's rating, highest first
+
+    res.json(enriched);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// -----------------------------------
 // 2. Most Active Users
 // -----------------------------------
 exports.getActiveUsers = async (req, res) => {

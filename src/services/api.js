@@ -134,6 +134,23 @@ export const fetchTopRatedAlbums = async () => {
 // Alias
 export const fetchTopRated = fetchTopRatedAlbums;
 
+export const fetchUserTopRatedAlbums = async (userId = CURRENT_USER_ID) => {
+  const response = await fetch(`${API_URL}/analytics/user-top-rated?userId=${userId}`);
+  if (!response.ok) throw new Error('Failed to fetch user top rated albums');
+  const data = await response.json();
+  return data.map(d => ({
+    id: d._id,
+    title: d.title,
+    artist: d.artist,
+    rating: d.userRating,
+    avgRating: d.avgRating,
+    totalRatings: d.totalReviews,
+    plays: d.plays,
+    color: d.color || '#3b82f6',
+    cover_url: d.cover_url
+  }));
+};
+
 export const fetchTrendingGenres = async () => {
   const response = await fetch(`${API_URL}/analytics/trending-genres`);
   if (!response.ok) throw new Error('Failed to fetch trending genres');

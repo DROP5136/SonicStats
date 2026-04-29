@@ -11,6 +11,11 @@ export default function App() {
   const [activePage, setActivePage] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [albumDetailId, setAlbumDetailId] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleAlbumReviewUpdated = useCallback(() => {
+    setRefreshKey(prev => prev + 1);
+  }, []);
 
   const handleChangePage = useCallback((pageId) => {
     setActivePage(pageId);
@@ -38,11 +43,11 @@ export default function App() {
 
   function renderPage() {
     if (activePage === 'album-detail' && albumDetailId) {
-      return <AlbumDetailPage albumId={albumDetailId} onBack={handleBackFromDetail} />;
+      return <AlbumDetailPage albumId={albumDetailId} onBack={handleBackFromDetail} onReviewUpdated={handleAlbumReviewUpdated} />;
     }
     switch (activePage) {
       case 'dashboard':
-        return <DashboardPage onNavigateAlbum={handleNavigateAlbum} />;
+        return <DashboardPage onNavigateAlbum={handleNavigateAlbum} refreshKey={refreshKey} />;
       case 'albums':
         return <AlbumsPage onNavigateAlbum={handleNavigateAlbum} />;
       case 'activity':

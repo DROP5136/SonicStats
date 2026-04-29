@@ -38,6 +38,9 @@ albumSchema.index(
 // E.g., db.albums.find({ artist: "Luna Vale", genres: "Electronic" })
 albumSchema.index({ artist: 1, genres: 1 });
 
+// Leaderboard index: supports sorting the top-rated album views by score and volume.
+albumSchema.index({ average_rating: -1, total_ratings: -1 });
+
 // Index on nested array field: allows efficient querying/sorting of albums containing specific ratings.
 // E.g., db.albums.find({ "reviews.rating": { $gte: 4 } })
 albumSchema.index({ 'reviews.rating': 1 });

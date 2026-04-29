@@ -1,4 +1,4 @@
-export default function AlbumCard({ album, onClick }) {
+export default function AlbumCard({ album, onClick, showUserRating = false }) {
   const formatPlays = (plays) => {
     if (!plays && plays !== 0) return 'No plays';
     return plays >= 1000 ? `${(plays / 1000).toFixed(1)}K` : plays;
@@ -16,7 +16,10 @@ export default function AlbumCard({ album, onClick }) {
         <h3 className="album-card-title">{album.title}</h3>
         <p className="album-card-artist">{album.artist}</p>
         <div className="album-card-footer">
-          <span className="album-card-rating">★ {album.rating?.toFixed(1) || album.rating}</span>
+          <span className="album-card-rating">
+            ★ {album.rating?.toFixed(1) || album.rating}
+            {showUserRating && <span style={{ fontSize: '0.8em', marginLeft: '4px', opacity: 0.7 }}>(Your rating)</span>}
+          </span>
           <span className="album-card-plays">
             {formatPlays(album.plays)} plays
           </span>

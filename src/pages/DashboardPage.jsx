@@ -9,7 +9,7 @@ import { IconMusic, IconStar, IconHeadphones, IconBarChart, IconTrendUp } from '
 import AlbumCard from '../components/AlbumCard';
 import ChartCard from '../components/ChartCard';
 import FilterBar from '../components/FilterBar';
-import { fetchTopRated, fetchTopArtists, fetchGenreChartData, fetchDashboardStats } from '../services/api';
+import { fetchTopRated, fetchTopArtists, fetchGenreChartData, fetchDashboardStats, fetchUserTopRatedAlbums } from '../services/api';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend, Filler);
 
@@ -37,19 +37,21 @@ const STAT_META = [
   { id: 'users',   label: 'Total Users',    key: 'totalUsers',   icon: IconHeadphones, change: '+23%', positive: true },
 ];
 
-export default function DashboardPage({ onNavigateAlbum }) {
+export default function DashboardPage({ onNavigateAlbum, refreshKey }) {
   const [timeRange, setTimeRange] = useState('weekly');
   const [topAlbums, setTopAlbums] = useState([]);
+  const [userTopAlbums, setUserTopAlbums] = useState([]);
   const [artists, setArtists] = useState([]);
   const [genreChart, setGenreChart] = useState(null);
   const [dashStats, setDashStats] = useState(null);
 
   useEffect(() => {
     fetchTopRated().then(setTopAlbums).catch(console.error);
+    fetchUserTopRatedAlbums().then(setUserTopAlbums).catch(console.error);
     fetchTopArtists().then(setArtists).catch(console.error);
     fetchGenreChartData().then(setGenreChart).catch(console.error);
     fetchDashboardStats().then(setDashStats).catch(console.error);
-  }, []);
+  }, [refreshKey]);
 
   // Line chart — Listening Activity (illustrative; no time-series backend yet)
   const lineData = useMemo(() => {
@@ -182,6 +184,21 @@ export default function DashboardPage({ onNavigateAlbum }) {
           </div>
         </ChartCard>
       </div>
+
+      {/* My Top Rated Albums — based on user's personal ratings */}
+      {userTopAlbums.length > 0 && (
+        <div className="section-block fade-in">
+          <div className="card-header" style={{ marginBottom: 16 }}>
+            <h2 className="card-title">My Top Rated Albums</h2>
+            <span className="card-action">{userTopAlbums.length} albums rated</span>
+          </div>
+          <div className="album-card-grid">
+            {userTopAlbums.slice(0, 8).map((album) => (
+              <AlbumCard key={album.id} album={album} showUserRating={true} onClick={() => onNavigateAlbum?.(album.id)} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Top Rated Albums — from real backend aggregation */}
       <div className="section-block fade-in">

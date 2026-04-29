@@ -50,10 +50,8 @@ const ALBUMS = [
  */
 const REVIEWS = [
   { albumId: 1, userId: 'u1', username: 'MelodyHunter',  rating: 5, comment: 'An absolute masterpiece. The production quality is unmatched and every track flows seamlessly into the next.', date: '2025-04-20' },
-  { albumId: 1, userId: 'me', username: 'Lakshay',        rating: 4, comment: 'Incredible soundscapes. Ravi Shankar Jr has outdone himself with this one.',                                   date: '2025-04-18' },
   { albumId: 1, userId: 'u2', username: 'VinylVibes',     rating: 5, comment: 'Hauntingly beautiful. Every listen reveals a new layer of depth.',                                             date: '2025-04-15' },
   { albumId: 2, userId: 'u3', username: 'IndieExplorer',  rating: 5, comment: 'Arijit Singh keeps pushing emotional boundaries. This album is a journey.',                                    date: '2025-04-19' },
-  { albumId: 2, userId: 'me', username: 'Lakshay',        rating: 4, comment: 'Vocal work is phenomenal. Raw emotion with polished production.',                                              date: '2025-04-16' },
 ];
 
 /**

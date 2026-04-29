@@ -3,6 +3,7 @@ const router = express.Router();
 const analyticsController = require('../controllers/analyticsController');
 
 router.get('/top-rated', analyticsController.getTopRatedAlbums);
+router.get('/user-top-rated', analyticsController.getUserTopRatedAlbums);
 router.get('/trending-genres', analyticsController.getTrendingGenres);
 router.get('/active-users', analyticsController.getActiveUsers);
 router.get('/genre-chart', analyticsController.getGenreChartData);
