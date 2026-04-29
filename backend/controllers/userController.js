@@ -69,39 +69,57 @@ exports.getUserProfile = async (req, res) => {
       user.review_activity.map(a => a.album_id.toString())
     ).size;
 
-    // Get user's actual review entries with album details
-    const reviewDetails = await User.aggregate([
-      { $match: { _id: userId } },
-      { $unwind: '$review_activity' },
-      { $match: { 'review_activity.action': 'created' } },
-      {
-        $lookup: {
-          from: 'albums',
-          localField: 'review_activity.album_id',
-          foreignField: '_id',
-          as: 'albumInfo'
+    // Build the current review state from review_activity so edits overwrite older values
+    // and deletes remove the review from the profile list.
+    const currentReviews = new Map();
+
+    [...user.review_activity]
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+      .forEach((activity) => {
+        const albumKey = activity.album_id.toString();
+
+        if (activity.action === 'deleted') {
+          currentReviews.delete(albumKey);
+          return;
         }
-      },
-      { $unwind: '$albumInfo' },
-      { $sort: { 'review_activity.timestamp': -1 } },
-      {
-        $project: {
-          albumId: '$albumInfo._id',
-          albumTitle: '$albumInfo.title',
-          artist: '$albumInfo.artist',
-          rating: '$review_activity.rating',
-          comment: '$review_activity.review_text',
-          date: {
-            $dateToString: {
-              format: '%Y-%m-%d',
-              date: '$review_activity.timestamp',
-              timezone: 'Asia/Kolkata'
-            }
-          },
-          color: '$albumInfo.color'
+
+        if (activity.action === 'created' || activity.action === 'edited') {
+          currentReviews.set(albumKey, {
+            album_id: activity.album_id,
+            rating: activity.rating,
+            comment: activity.review_text,
+            timestamp: activity.timestamp
+          });
         }
-      }
-    ]);
+      });
+
+    const reviewActivityList = Array.from(currentReviews.values());
+
+    const albumIds = reviewActivityList.map(entry => entry.album_id);
+    const albums = await Album.find({ _id: { $in: albumIds } }).lean();
+
+    const reviewDetails = reviewActivityList
+      .map((entry) => {
+        const albumInfo = albums.find(a => a._id.toString() === entry.album_id.toString());
+        if (!albumInfo) return null;
+
+        return {
+          albumId: albumInfo._id,
+          albumTitle: albumInfo.title,
+          artist: albumInfo.artist,
+          rating: entry.rating,
+          comment: entry.comment,
+          rawTimestamp: entry.timestamp,
+          date: new Intl.DateTimeFormat('en-IN', {
+            dateStyle: 'medium',
+            timeZone: 'Asia/Kolkata'
+          }).format(new Date(entry.timestamp)),
+          color: albumInfo.color
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => new Date(b.rawTimestamp) - new Date(a.rawTimestamp))
+      .map(({ rawTimestamp, ...review }) => review);
 
     res.json({
       name: user.name,

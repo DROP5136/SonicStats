@@ -113,7 +113,7 @@ export default function App() {
       case 'activity':
         return <ActivityPage />;
       case 'profile':
-        return <ProfilePage />;
+        return <ProfilePage refreshKey={refreshKey} />;
       default:
         return <DashboardPage onNavigateAlbum={handleNavigateAlbum} />;
     }

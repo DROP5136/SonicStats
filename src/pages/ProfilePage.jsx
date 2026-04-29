@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { IconMusic, IconStar, IconHeadphones } from '../components/Icons';
 import { fetchUserProfile, fetchUserActivity } from '../services/api';
 
-export default function ProfilePage() {
+export default function ProfilePage({ refreshKey }) {
   const [user, setUser] = useState(null);
   const [history, setHistory] = useState([]);
   const [error, setError] = useState(null);
@@ -14,7 +14,7 @@ export default function ProfilePage() {
     fetchUserActivity()
       .then(setHistory)
       .catch(console.error);
-  }, []);
+  }, [refreshKey]);
 
   if (error) {
     return (
